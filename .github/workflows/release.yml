@@ -1,0 +1,36 @@
+name: Stable release
+
+on:
+  pull_request:
+    branches: [stable]
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: >-
+      github.event.pull_request.merged &&
+      github.event.pull_request.head.ref == 'testing' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: stable-release-${{ github.event.pull_request.merge_commit_sha }}
+    env:
+      MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+      TESTED_SHA: ${{ github.event.pull_request.head.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test
+      - run: python scripts/package.py
+      - run: bash scripts/publish.sh "$MERGE_SHA" "$TESTED_SHA"

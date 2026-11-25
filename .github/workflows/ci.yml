@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, stable]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: checks
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test
+      - name: Check shell syntax and promotion safety
+        run: |
+          for script in install.sh scripts/*.sh tests/workflows.sh; do bash -n "$script"; done
+          bash tests/workflows.sh
+        shell: bash
+      - name: Package and verify installation
+        run: python scripts/package.py
+  promote:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: promote-testing
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/promote.sh "$GITHUB_SHA"

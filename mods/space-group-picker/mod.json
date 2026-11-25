@@ -1,0 +1,6 @@
+{
+  "place": "none",
+  "title": "Space Group Settings",
+  "overlay": { "kind": "dialog", "width": 420 },
+  "palette": [{ "title": "Space Group Settings", "command": "mod.open", "args": { "name": "space-group-picker" }, "words": "spaces groups rename" }]
+}

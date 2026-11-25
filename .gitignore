@@ -1,0 +1,5 @@
+.superpowers/
+/docs/superpowers/
+.dist/
+__pycache__/
+*.error
